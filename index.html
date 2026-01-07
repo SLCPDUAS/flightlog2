@@ -141,8 +141,6 @@ const firebaseConfig = {
 const ADMIN_PIN = "1019";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-/* Offline persistence */
 enableIndexedDbPersistence(db).catch(() => {});
 
 let startTime = null, timerInterval = null, admin = false;
@@ -173,59 +171,72 @@ window.endFlight = async () => {
     date: Timestamp.fromDate(startTime),
     startTime: Timestamp.fromDate(startTime),
     endTime: Timestamp.fromDate(endTime),
-    drone: drone.value,
-    location: location.value,
-    laanc: laanc.value,
-    purpose: purpose.value,
-    daynight: daynight.value,
-    observer: observer.value,
-    weather: weather.value || "",
-    notes: notes.value,
+    drone: (document.getElementById("drone")?.value || ""),
+    location: (document.getElementById("location")?.value || ""),
+    laanc: (document.getElementById("laanc")?.value || ""),
+    purpose: (document.getElementById("purpose")?.value || ""),
+    daynight: (document.getElementById("daynight")?.value || "Day"),
+    observer: (document.getElementById("observer")?.value || ""),
+    weather: (document.getElementById("weather")?.value || ""),
+    notes: (document.getElementById("notes")?.value || ""),
     minutes
   };
 
-  try { await addDoc(collection(db,"flights"), flightData); } 
-  catch(err){ alert("Error saving flight: "+err.message); return; }
+  try {
+    await addDoc(collection(db,"flights"), flightData);
+  } catch(err) {
+    console.error("Error saving flight:", err);
+    alert("Error saving flight: " + err.message);
+    return;
+  }
 
-  // reset form
-  drone.value=""; location.value=""; laanc.value=""; purpose.value="";
-  daynight.value="Day"; observer.value=""; weather.value=""; notes.value="";
-  startTime=null; timer.innerText="00:00:00";
+  // Reset form for new flight
+  ["drone","location","laanc","purpose","daynight","observer","weather","notes"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = (id==="daynight") ? "Day" : "";
+  });
+  startTime = null;
+  timer.innerText = "00:00:00";
 };
 
 window.toggleAdmin = () => {
   if(!admin && prompt("Enter Admin PIN")===ADMIN_PIN){
     admin=true;
     document.querySelectorAll(".adminOnly").forEach(e=>e.classList.remove("hidden"));
-  }else{
+  } else {
     admin=false;
     document.querySelectorAll(".adminOnly").forEach(e=>e.classList.add("hidden"));
   }
 };
 
-const renderFlights = snap=>{
-  log.innerHTML="";
-  let flights=0, minutes=0;
-  snap.forEach(d=>{
-    const f=d.data(); flights++; minutes+=f.minutes;
-    log.innerHTML+=`
-      <tr>
-        <td>${new Date(f.date.toDate()).toLocaleDateString()}</td>
-        <td>${formatTime(f.startTime)}</td>
-        <td>${formatTime(f.endTime)}</td>
-        <td>${f.drone}</td>
-        <td>${f.location}</td>
-        <td>${f.laanc||""}</td>
-        <td>${f.minutes}</td>
-        <td class="weather">${f.weather||""}</td>
-        <td class="notes">${f.notes||""}</td>
-        ${admin?`<td><button onclick="deleteFlight('${d.id}')">❌</button></td>`:""}
-      </tr>`;
-  });
-  totalFlights.innerText=flights; totalMinutes.innerText=minutes;
+const renderFlights = snap => {
+  try {
+    log.innerHTML="";
+    let flights=0, minutes=0;
+    snap.forEach(d=>{
+      const f=d.data(); flights++; minutes+=f.minutes;
+      const date = f.date?.toDate ? f.date.toDate() : new Date(f.date);
+      log.innerHTML+=`
+        <tr>
+          <td>${date.toLocaleDateString()}</td>
+          <td>${formatTime(f.startTime)}</td>
+          <td>${formatTime(f.endTime)}</td>
+          <td>${f.drone}</td>
+          <td>${f.location}</td>
+          <td>${f.laanc||""}</td>
+          <td>${f.minutes}</td>
+          <td class="weather">${f.weather||""}</td>
+          <td class="notes">${f.notes||""}</td>
+          ${admin?`<td><button onclick="deleteFlight('${d.id}')">❌</button></td>`:""}
+        </tr>`;
+    });
+    totalFlights.innerText=flights; totalMinutes.innerText=minutes;
+  } catch(e){
+    console.error("Error rendering flights:", e);
+  }
 };
 
-onSnapshot(collection(db,"flights"),renderFlights);
+onSnapshot(collection(db,"flights"), renderFlights);
 
 window.deleteFlight = async id => { if(confirm("Delete flight?")) await deleteDoc(doc(db,"flights",id)); };
 </script>
