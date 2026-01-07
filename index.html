@@ -7,7 +7,12 @@
 
 <style>
 * { box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background:#f4f6f8; padding:14px; color:black; }
+body {
+  font-family: Arial, sans-serif;
+  background:#f4f6f8;
+  padding:14px;
+  color:black;
+}
 h1,h2 { text-align:center; }
 
 .card {
@@ -18,7 +23,11 @@ h1,h2 { text-align:center; }
   margin-bottom:14px;
 }
 
-label { font-weight:bold; margin-top:10px; display:block; }
+label {
+  font-weight:bold;
+  margin-top:10px;
+  display:block;
+}
 
 input, select, textarea {
   width:100%;
@@ -53,7 +62,7 @@ button {
   margin-top:10px;
 }
 
-/* ✅ TABLE FIX */
+/* Mobile-safe table */
 .table-wrapper {
   width:100%;
   overflow-x:auto;
@@ -62,7 +71,7 @@ button {
 
 table {
   width:100%;
-  min-width:900px; /* forces scroll instead of overflow */
+  min-width:900px;
   border-collapse:collapse;
 }
 
@@ -70,12 +79,9 @@ th, td {
   border:1px solid black;
   padding:8px;
   vertical-align:top;
-  white-space:normal;
 }
 
-th {
-  background:#eee;
-}
+th { background:#eee; }
 </style>
 </head>
 
@@ -123,8 +129,6 @@ th {
 
 <div class="card">
   <h2>Flight History</h2>
-
-  <!-- ✅ WRAPPER FIX -->
   <div class="table-wrapper">
     <table>
       <thead>
@@ -162,7 +166,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ===== TIMER (DO NOT CHANGE) ===== */
+/* ===== TIMER (STABLE) ===== */
 let timerInterval = null;
 let elapsedSeconds = 0;
 let flightStartDate = null;
@@ -195,6 +199,10 @@ window.resetFlight = () => {
   elapsedSeconds = 0;
   flightStartDate = null;
   timer.innerText = "00:00:00";
+
+  ["drone","flightLocation","laanc","purpose","observer","weather","notes"]
+    .forEach(id => document.getElementById(id).value = "");
+  daynight.value = "Day";
 };
 
 window.endFlight = async () => {
@@ -219,13 +227,7 @@ window.endFlight = async () => {
     notes: notes.value || ""
   });
 
-  elapsedSeconds = 0;
-  flightStartDate = null;
-  timer.innerText = "00:00:00";
-
-  ["drone","flightLocation","laanc","purpose","observer","weather","notes"]
-    .forEach(id => document.getElementById(id).value = "");
-  daynight.value = "Day";
+  resetFlight();
 };
 
 window.deleteFlight = async id => {
@@ -235,8 +237,8 @@ window.deleteFlight = async id => {
 };
 
 onSnapshot(collection(db,"flights"), snap => {
-  log.innerHTML="";
-  snap.forEach(d=>{
+  log.innerHTML = "";
+  snap.forEach(d => {
     const f = d.data();
     log.innerHTML += `
       <tr>
