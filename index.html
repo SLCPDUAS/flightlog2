@@ -128,7 +128,7 @@ th { background: #f0f0f0; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, deleteDoc, doc,
-  onSnapshot, enableIndexedDbPersistence
+  onSnapshot, enableIndexedDbPersistence, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* Firebase config */
@@ -141,6 +141,8 @@ const firebaseConfig = {
 const ADMIN_PIN = "1019";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+/* Offline persistence */
 enableIndexedDbPersistence(db).catch(() => {});
 
 let startTime = null, timerInterval = null, admin = false;
@@ -168,16 +170,16 @@ window.endFlight = async () => {
 
   const flightData = {
     pilot: "Randy Neal",
-    date: startTime.toISOString(),
-    startTime: startTime.toISOString(),
-    endTime: endTime.toISOString(),
+    date: Timestamp.fromDate(startTime),
+    startTime: Timestamp.fromDate(startTime),
+    endTime: Timestamp.fromDate(endTime),
     drone: drone.value,
     location: location.value,
     laanc: laanc.value,
     purpose: purpose.value,
     daynight: daynight.value,
     observer: observer.value,
-    weather: weather.value||"",
+    weather: weather.value || "",
     notes: notes.value,
     minutes
   };
@@ -208,7 +210,7 @@ const renderFlights = snap=>{
     const f=d.data(); flights++; minutes+=f.minutes;
     log.innerHTML+=`
       <tr>
-        <td>${new Date(f.date).toLocaleDateString()}</td>
+        <td>${new Date(f.date.toDate()).toLocaleDateString()}</td>
         <td>${formatTime(f.startTime)}</td>
         <td>${formatTime(f.endTime)}</td>
         <td>${f.drone}</td>
