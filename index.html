@@ -5,6 +5,19 @@
 <title>Drone Flight Log – Randy Neal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!--
+  SIMPLE FIREBASE SETUP INCLUDED:
+
+  Your Firebase info is already embedded. Flight data will save to your Firestore collection 'flights'.
+  Features:
+  - Manual Weather input
+  - LAANC input
+  - Start / End timestamps
+  - Flight time calculation
+  - Offline persistence
+  - Admin PIN 1019 to delete flights
+-->
+
 <style>
 * { box-sizing: border-box; }
 
@@ -46,7 +59,6 @@ input, select, textarea {
 input:disabled { background: #f0f0f0; color: black; }
 textarea { resize: vertical; }
 
-/* Buttons */
 button {
   width: 100%;
   padding: 14px;
@@ -71,7 +83,6 @@ button {
   font-size: 18px;
 }
 
-/* Table styling */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -94,7 +105,6 @@ td.notes { width: 25%; }
 th { background: #f0f0f0; }
 .hidden { display: none; }
 
-/* Mobile responsive table */
 @media (max-width: 600px) {
   table, thead, tbody, th, td, tr { display: block; }
   thead { display: none; }
@@ -203,18 +213,18 @@ import {
   onSnapshot, enableIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* Firebase config */
+/* 🔹 Firebase config provided by user */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID"
+  apiKey: "AIzaSyBT_rjRmkYzgq0PZo5fTPbIjnICD5kbbzE",
+  authDomain: "flight-log-5f750.firebaseapp.com",
+  projectId: "flight-log-5f750"
 };
 
 const ADMIN_PIN = "1019";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* Offline mode */
+/* Offline mode enabled */
 enableIndexedDbPersistence(db).catch(() => {});
 
 let startTime = null, timerInterval = null, admin = false;
