@@ -46,7 +46,7 @@ input, select, textarea {
 input:disabled { background: #f0f0f0; color: black; }
 textarea { resize: vertical; }
 
-/* ✅ Weather Section: Flexbox for perfect alignment */
+/* ✅ Weather Section: Flexbox with perfect vertical alignment */
 .weather-container {
   display: flex;
   flex-wrap: wrap;
@@ -56,11 +56,12 @@ textarea { resize: vertical; }
 
 .weather-option {
   display: flex;
-  align-items: center;
+  align-items: center; /* aligns checkbox with text */
   gap: 6px;
   font-size: 16px;
   cursor: pointer;
-  flex: 1 1 30%; /* allows two or three per row based on screen */
+  flex: 1 1 45%; /* two per row on mobile */
+  min-width: 120px; /* prevents text from wrapping too early */
 }
 
 /* Buttons */
