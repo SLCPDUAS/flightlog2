@@ -145,10 +145,18 @@ const formatTime = t => {
 };
 
 window.startFlight = () => {
-  if (startTime) return; // Prevent multiple timers
+  if (startTime) return; // prevent multiple timers
+  if (timerInterval) clearInterval(timerInterval);
+
   startTime = new Date();
+  timer.innerText = "00:00:00";
+
   timerInterval = setInterval(() => {
-    timer.innerText = new Date(new Date()-startTime).toISOString().substring(11,19);
+    const diff = new Date() - startTime;
+    const hrs = String(Math.floor(diff / 3600000)).padStart(2,'0');
+    const mins = String(Math.floor((diff % 3600000)/60000)).padStart(2,'0');
+    const secs = String(Math.floor((diff % 60000)/1000)).padStart(2,'0');
+    timer.innerText = `${hrs}:${mins}:${secs}`;
   },1000);
 };
 
@@ -184,11 +192,10 @@ window.endFlight = async () => {
     return;
   }
 
-  // ✅ FULL RESET FOR NEXT FLIGHT
+  // ✅ FULL RESET
   startTime = null;
   timer.innerText = "00:00:00";
-  const fields = ["drone","location","laanc","purpose","daynight","observer","weather","notes"];
-  fields.forEach(id => {
+  ["drone","location","laanc","purpose","daynight","observer","weather","notes"].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.value = (id==="daynight") ? "Day" : "";
   });
