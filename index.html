@@ -46,24 +46,6 @@ input, select, textarea {
 input:disabled { background: #f0f0f0; color: black; }
 textarea { resize: vertical; }
 
-/* ✅ Weather Section: Flexbox with perfect vertical alignment */
-.weather-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 6px;
-}
-
-.weather-option {
-  display: flex;
-  align-items: center; /* aligns checkbox with text */
-  gap: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  flex: 1 1 45%; /* two per row on mobile */
-  min-width: 120px; /* prevents text from wrapping too early */
-}
-
 /* Buttons */
 button {
   width: 100%;
@@ -169,14 +151,8 @@ th { background: #f0f0f0; }
   <label>Visual Observer</label>
   <input id="observer">
 
-  <label>Weather (select all that apply)</label>
-  <div class="weather-container">
-    <label class="weather-option"><input type="checkbox" value="Clear">Clear</label>
-    <label class="weather-option"><input type="checkbox" value="Cloudy">Cloudy</label>
-    <label class="weather-option"><input type="checkbox" value="Rain">Rain</label>
-    <label class="weather-option"><input type="checkbox" value="Snow">Snow</label>
-    <label class="weather-option"><input type="checkbox" value="Windy">Windy</label>
-  </div>
+  <label>Weather</label>
+  <input id="weather" placeholder="e.g. Clear, Windy" style="color:black;">
 
   <label>Notes</label>
   <textarea id="notes"></textarea>
@@ -262,8 +238,7 @@ window.endFlight = async () => {
   const endTime = new Date();
   const minutes = Math.round((endTime - startTime) / 60000);
 
-  const weather = [...document.querySelectorAll('.weather-option input:checked')]
-    .map(cb => cb.value);
+  const weatherValue = weather.value || "";
 
   await addDoc(collection(db, "flights"), {
     pilot: "Randy Neal",
@@ -276,14 +251,15 @@ window.endFlight = async () => {
     purpose: purpose.value,
     daynight: daynight.value,
     observer: observer.value,
-    weather,
+    weather: weatherValue,
     notes: notes.value,
     minutes
   });
 
   startTime = null;
   timer.innerText = "00:00:00";
-  document.querySelectorAll('.weather-option input').forEach(cb => cb.checked = false);
+  weather.value = "";
+  notes.value = "";
 };
 
 window.toggleAdmin = () => {
@@ -313,7 +289,7 @@ onSnapshot(collection(db, "flights"), snap => {
         <td>${f.location}</td>
         <td>${f.laanc || ""}</td>
         <td>${f.minutes}</td>
-        <td class="weather">${(f.weather || []).join(", ")}</td>
+        <td class="weather">${f.weather || ""}</td>
         <td class="notes">${f.notes || ""}</td>
         ${admin ? `<td><button onclick="deleteFlight('${d.id}')">❌</button></td>` : ""}
       </tr>`;
