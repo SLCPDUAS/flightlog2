@@ -7,47 +7,21 @@
 
 <style>
 * { box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 14px; color: black; }
-h1,h2 { text-align: center; margin: 6px 0; }
-.card { background: white; border: 2px solid black; border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: 0 3px 8px rgba(0,0,0,.15); }
-label { font-weight: bold; margin-top: 10px; display: block; }
-input, select, textarea { width: 100%; padding: 10px; margin-top: 4px; font-size: 16px; color: black; border: 1px solid black; border-radius: 6px; }
-textarea { resize: vertical; }
-input:disabled { background: #f0f0f0; color: black; }
-button { width: 100%; padding: 14px; font-size: 18px; margin-top: 10px; border-radius: 10px; border: none; color: white; cursor: pointer; }
-.start { background: #28a745; }
-.stop { background: #c82333; }
-#timer { text-align: center; font-size: 26px; font-weight: bold; margin-top: 10px; }
-.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 18px; }
-table { width: 100%; border-collapse: collapse; table-layout: fixed; word-break: break-word; }
-th, td { border: 1px solid black; padding: 8px; text-align: left; vertical-align: top; overflow-wrap: break-word; white-space: normal; }
-td.weather { width: 20%; }
-td.notes { width: 25%; }
-th { background: #f0f0f0; }
-
-/* Mobile-friendly layout */
-@media (max-width: 700px) {
-  .card { padding: 12px; }
-  input, select, textarea { font-size: 14px; padding: 8px; }
-  button { font-size: 16px; padding: 12px; }
-  table, thead, tbody, th, td, tr { display: block; }
-  thead { display: none; }
-  tr { margin-bottom: 12px; border: 1px solid black; padding: 8px; border-radius: 8px; }
-  td { border: none; position: relative; padding-left: 50%; margin-bottom: 6px; }
-  td:before { position: absolute; top: 8px; left: 10px; width: 45%; font-weight: bold; white-space: nowrap; }
-  td:nth-of-type(1):before { content: "Date"; }
-  td:nth-of-type(2):before { content: "Start"; }
-  td:nth-of-type(3):before { content: "End"; }
-  td:nth-of-type(4):before { content: "Drone"; }
-  td:nth-of-type(5):before { content: "Location"; }
-  td:nth-of-type(6):before { content: "LAANC"; }
-  td:nth-of-type(7):before { content: "Minutes"; }
-  td:nth-of-type(8):before { content: "Weather"; }
-  td:nth-of-type(9):before { content: "Notes"; }
-  td:nth-of-type(10):before { content: "Delete"; }
-}
+body { font-family: Arial, sans-serif; background:#f4f6f8; padding:14px; color:black; }
+.card { background:white; border:2px solid black; border-radius:12px; padding:16px; margin-bottom:14px; }
+label { font-weight:bold; margin-top:10px; display:block; }
+input, select, textarea { width:100%; padding:10px; font-size:16px; border:1px solid black; border-radius:6px; color:black; }
+textarea { resize:vertical; }
+button { width:100%; padding:14px; font-size:18px; margin-top:10px; border:none; border-radius:10px; color:white; }
+.start { background:#28a745; }
+.stop { background:#c82333; }
+#timer { text-align:center; font-size:28px; font-weight:bold; margin-top:10px; }
+table { width:100%; border-collapse:collapse; }
+th,td { border:1px solid black; padding:8px; }
+th { background:#eee; }
 </style>
 </head>
+
 <body>
 
 <h1>Drone Flight Log</h1>
@@ -56,32 +30,13 @@ th { background: #f0f0f0; }
   <label>Pilot</label>
   <input value="Randy Neal" disabled>
 
-  <label>Drone</label>
-  <input id="drone">
-
-  <label>Location</label>
-  <input id="location">
-
-  <label>LAANC Authorization #</label>
-  <input id="laanc" placeholder="e.g. A2025-004821">
-
-  <label>Purpose of Flight</label>
-  <input id="purpose">
-
-  <label>Day / Night</label>
-  <select id="daynight">
-    <option>Day</option>
-    <option>Night</option>
-  </select>
-
-  <label>Visual Observer</label>
-  <input id="observer">
-
-  <label>Weather</label>
-  <input id="weather" placeholder="e.g. Clear, Windy" style="color:black;">
-
-  <label>Notes</label>
-  <textarea id="notes"></textarea>
+  <label>Drone</label><input id="drone">
+  <label>Location</label><input id="location">
+  <label>LAANC</label><input id="laanc">
+  <label>Purpose</label><input id="purpose">
+  <label>Observer</label><input id="observer">
+  <label>Weather</label><input id="weather">
+  <label>Notes</label><textarea id="notes"></textarea>
 
   <button class="start" onclick="startFlight()">START FLIGHT</button>
   <button class="stop" onclick="endFlight()">END FLIGHT</button>
@@ -90,28 +45,11 @@ th { background: #f0f0f0; }
 </div>
 
 <div class="card">
-  <h2>Stats</h2>
-  <div class="stats">
-    <div>Total Flights: <b id="totalFlights">0</b></div>
-    <div>Total Minutes: <b id="totalMinutes">0</b></div>
-  </div>
-</div>
-
-<div class="card">
   <h2>Flight History</h2>
   <table>
     <thead>
       <tr>
-        <th>Date</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Drone</th>
-        <th>Location</th>
-        <th>LAANC</th>
-        <th>Minutes</th>
-        <th>Weather</th>
-        <th>Notes</th>
-        <th>Delete</th>
+        <th>Date</th><th>Minutes</th><th>Drone</th><th>Delete</th>
       </tr>
     </thead>
     <tbody id="log"></tbody>
@@ -120,10 +58,8 @@ th { background: #f0f0f0; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, deleteDoc, doc,
-  onSnapshot, enableIndexedDbPersistence, Timestamp
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, Timestamp } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBT_rjRmkYzgq0PZo5fTPbIjnICD5kbbzE",
@@ -133,101 +69,67 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-enableIndexedDbPersistence(db).catch(()=>{});
 
-let startTime = null, timerInterval = null;
-const timerDisplay = document.getElementById("timer");
-const startBtn = document.querySelector(".start");
+let timerInterval = null;
+let elapsedSeconds = 0;
+let flightStartDate = null;
 
-const formatTime = t => {
-  if (!t) return "";
-  let dateObj = (typeof t === "object" && t.seconds) ? new Date(t.seconds*1000) : new Date(t);
-  return dateObj.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-};
+function updateTimer() {
+  elapsedSeconds++;
+  const hrs = String(Math.floor(elapsedSeconds / 3600)).padStart(2,'0');
+  const mins = String(Math.floor((elapsedSeconds % 3600)/60)).padStart(2,'0');
+  const secs = String(elapsedSeconds % 60).padStart(2,'0');
+  document.getElementById("timer").innerText = `${hrs}:${mins}:${secs}`;
+}
 
 window.startFlight = () => {
-  if(startTime) return;
-  clearInterval(timerInterval);
-  startTime = new Date();
-  timerDisplay.innerText = "00:00:00";
-  startBtn.disabled = true;
+  if (timerInterval) return;
 
-  timerInterval = setInterval(()=>{
-    const diff = new Date() - startTime;
-    const hrs = String(Math.floor(diff/3600000)).padStart(2,'0');
-    const mins = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
-    const secs = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
-    timerDisplay.innerText = `${hrs}:${mins}:${secs}`;
-  },1000);
+  elapsedSeconds = 0;
+  flightStartDate = new Date();
+  document.getElementById("timer").innerText = "00:00:00";
+
+  timerInterval = setInterval(updateTimer, 1000);
 };
 
 window.endFlight = async () => {
-  if(!startTime) return;
+  if (!timerInterval) return;
+
   clearInterval(timerInterval);
   timerInterval = null;
 
-  const endTime = new Date();
-  const minutes = Math.round((endTime - startTime)/60000);
+  const minutes = Math.max(1, Math.round(elapsedSeconds / 60));
 
-  const flightData = {
-    pilot: "Randy Neal",
-    date: Timestamp.fromDate(startTime),
-    startTime: Timestamp.fromDate(startTime),
-    endTime: Timestamp.fromDate(endTime),
-    drone: document.getElementById("drone")?.value || "",
-    location: document.getElementById("location")?.value || "",
-    laanc: document.getElementById("laanc")?.value || "",
-    purpose: document.getElementById("purpose")?.value || "",
-    daynight: document.getElementById("daynight")?.value || "Day",
-    observer: document.getElementById("observer")?.value || "",
-    weather: document.getElementById("weather")?.value || "",
-    notes: document.getElementById("notes")?.value || "",
-    minutes
-  };
-
-  try { await addDoc(collection(db,"flights"), flightData); }
-  catch(err){ console.error(err); alert(err.message); }
-
-  // FULL RESET
-  startTime = null;
-  timerDisplay.innerText = "00:00:00";
-  startBtn.disabled = false;
-
-  ["drone","location","laanc","purpose","daynight","observer","weather","notes"].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.value = (id==="daynight")?"Day":"";
+  await addDoc(collection(db,"flights"), {
+    date: Timestamp.fromDate(flightStartDate),
+    minutes,
+    drone: drone.value || ""
   });
+
+  // HARD RESET
+  elapsedSeconds = 0;
+  flightStartDate = null;
+  document.getElementById("timer").innerText = "00:00:00";
+  ["drone","location","laanc","purpose","observer","weather","notes"].forEach(id => document.getElementById(id).value="");
 };
 
 window.deleteFlight = async id => {
-  if(confirm("Delete this flight?")) await deleteDoc(doc(db,"flights",id));
+  if(confirm("Delete flight?")) await deleteDoc(doc(db,"flights",id));
 };
 
-const renderFlights = snap => {
+onSnapshot(collection(db,"flights"), snap => {
   log.innerHTML="";
-  let flights=0, minutes=0;
   snap.forEach(d=>{
-    const f=d.data(); flights++; minutes+=f.minutes;
-    const date = f.date?.toDate ? f.date.toDate() : new Date(f.date);
-    log.innerHTML+=`
+    const f=d.data();
+    log.innerHTML += `
       <tr>
-        <td>${date.toLocaleDateString()}</td>
-        <td>${formatTime(f.startTime)}</td>
-        <td>${formatTime(f.endTime)}</td>
-        <td>${f.drone}</td>
-        <td>${f.location}</td>
-        <td>${f.laanc||""}</td>
+        <td>${f.date.toDate().toLocaleDateString()}</td>
         <td>${f.minutes}</td>
-        <td class="weather">${f.weather||""}</td>
-        <td class="notes">${f.notes||""}</td>
+        <td>${f.drone}</td>
         <td><button onclick="deleteFlight('${d.id}')">❌</button></td>
       </tr>`;
   });
-  totalFlights.innerText=flights;
-  totalMinutes.innerText=minutes;
-};
-
-onSnapshot(collection(db,"flights"), renderFlights);
+});
 </script>
 
 </body>
