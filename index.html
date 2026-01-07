@@ -9,26 +9,73 @@
 * { box-sizing: border-box; }
 body { font-family: Arial, sans-serif; background:#f4f6f8; padding:14px; color:black; }
 h1,h2 { text-align:center; }
-.card { background:white; border:2px solid black; border-radius:12px; padding:16px; margin-bottom:14px; }
+
+.card {
+  background:white;
+  border:2px solid black;
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:14px;
+}
+
 label { font-weight:bold; margin-top:10px; display:block; }
+
 input, select, textarea {
-  width:100%; padding:10px; font-size:16px;
-  border:1px solid black; border-radius:6px; color:black;
+  width:100%;
+  padding:10px;
+  font-size:16px;
+  border:1px solid black;
+  border-radius:6px;
+  color:black;
 }
+
 textarea { resize:vertical; }
+
 button {
-  width:100%; padding:14px; font-size:18px;
-  margin-top:10px; border:none; border-radius:10px;
-  color:white; cursor:pointer;
+  width:100%;
+  padding:14px;
+  font-size:18px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  color:white;
+  cursor:pointer;
 }
+
 .start { background:#28a745; }
 .stop { background:#c82333; }
 .reset { background:#6c757d; }
-#timer { text-align:center; font-size:28px; font-weight:bold; margin-top:10px; }
 
-table { width:100%; border-collapse:collapse; margin-top:10px; }
-th, td { border:1px solid black; padding:8px; vertical-align:top; }
-th { background:#eee; }
+#timer {
+  text-align:center;
+  font-size:28px;
+  font-weight:bold;
+  margin-top:10px;
+}
+
+/* ✅ TABLE FIX */
+.table-wrapper {
+  width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width:100%;
+  min-width:900px; /* forces scroll instead of overflow */
+  border-collapse:collapse;
+}
+
+th, td {
+  border:1px solid black;
+  padding:8px;
+  vertical-align:top;
+  white-space:normal;
+}
+
+th {
+  background:#eee;
+}
 </style>
 </head>
 
@@ -76,23 +123,27 @@ th { background:#eee; }
 
 <div class="card">
   <h2>Flight History</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Duration</th>
-        <th>Drone</th>
-        <th>Location</th>
-        <th>LAANC</th>
-        <th>Day/Night</th>
-        <th>Observer</th>
-        <th>Weather</th>
-        <th>Notes</th>
-        <th>Delete</th>
-      </tr>
-    </thead>
-    <tbody id="log"></tbody>
-  </table>
+
+  <!-- ✅ WRAPPER FIX -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Duration</th>
+          <th>Drone</th>
+          <th>Location</th>
+          <th>LAANC</th>
+          <th>Day/Night</th>
+          <th>Observer</th>
+          <th>Weather</th>
+          <th>Notes</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody id="log"></tbody>
+    </table>
+  </div>
 </div>
 
 <script type="module">
@@ -111,7 +162,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ===== TIMER (STABLE) ===== */
+/* ===== TIMER (DO NOT CHANGE) ===== */
 let timerInterval = null;
 let elapsedSeconds = 0;
 let flightStartDate = null;
