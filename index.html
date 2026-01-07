@@ -53,6 +53,7 @@ input:disabled {
 
 textarea { resize: vertical; }
 
+/* Weather – fixed alignment */
 .weather-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -60,13 +61,21 @@ textarea { resize: vertical; }
   margin-top: 6px;
 }
 
-.weather-item {
+.weather-option {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 16px;
+  font-weight: normal;
+  cursor: pointer;
 }
 
+.weather-option input {
+  width: auto;
+  margin: 0;
+}
+
+/* Buttons */
 button {
   width: 100%;
   padding: 14px;
@@ -80,7 +89,6 @@ button {
 
 .start { background: #28a745; }
 .stop { background: #c82333; }
-.export { background: #0b5ed7; }
 .admin { background: #6c757d; }
 
 #timer {
@@ -127,6 +135,10 @@ th, td {
   <label>Location</label>
   <input id="location">
 
+  <!-- ✅ LAANC SECTION -->
+  <label>LAANC Authorization # (if applicable)</label>
+  <input id="laanc" placeholder="e.g. A2025-004821">
+
   <label>Purpose of Flight</label>
   <input id="purpose">
 
@@ -141,11 +153,11 @@ th, td {
 
   <label>Weather (select all that apply)</label>
   <div class="weather-grid">
-    <div class="weather-item"><input type="checkbox" value="Clear"><span>Clear</span></div>
-    <div class="weather-item"><input type="checkbox" value="Cloudy"><span>Cloudy</span></div>
-    <div class="weather-item"><input type="checkbox" value="Rain"><span>Rain</span></div>
-    <div class="weather-item"><input type="checkbox" value="Snow"><span>Snow</span></div>
-    <div class="weather-item"><input type="checkbox" value="Windy"><span>Windy</span></div>
+    <label class="weather-option"><input type="checkbox" value="Clear">Clear</label>
+    <label class="weather-option"><input type="checkbox" value="Cloudy">Cloudy</label>
+    <label class="weather-option"><input type="checkbox" value="Rain">Rain</label>
+    <label class="weather-option"><input type="checkbox" value="Snow">Snow</label>
+    <label class="weather-option"><input type="checkbox" value="Windy">Windy</label>
   </div>
 
   <label>Notes</label>
@@ -179,6 +191,7 @@ th, td {
         <th>End</th>
         <th>Drone</th>
         <th>Location</th>
+        <th>LAANC</th>
         <th>Minutes</th>
         <th>Weather</th>
         <th>Notes</th>
@@ -192,13 +205,8 @@ th, td {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  enableIndexedDbPersistence
+  getFirestore, collection, addDoc, deleteDoc, doc,
+  onSnapshot, enableIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* 🔥 FIREBASE CONFIG */
@@ -213,24 +221,22 @@ const ADMIN_PIN = "1019";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ✅ OFFLINE MODE ENABLED */
-enableIndexedDbPersistence(db).catch(err => {
-  console.warn("Offline persistence unavailable:", err.code);
-});
+/* ✅ OFFLINE MODE */
+enableIndexedDbPersistence(db).catch(() => {});
 
 let startTime = null;
 let timerInterval = null;
 let admin = false;
 
-const formatTime = iso =>
-  new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const formatTime = t =>
+  new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 window.startFlight = () => {
   if (startTime) return;
   startTime = new Date();
   timerInterval = setInterval(() => {
-    const diff = new Date() - startTime;
-    timer.innerText = new Date(diff).toISOString().substring(11,19);
+    timer.innerText = new Date(new Date() - startTime)
+      .toISOString().substring(11,19);
   }, 1000);
 };
 
@@ -241,7 +247,7 @@ window.endFlight = async () => {
   const endTime = new Date();
   const minutes = Math.round((endTime - startTime) / 60000);
 
-  const weather = [...document.querySelectorAll('.weather-grid input:checked')]
+  const weather = [...document.querySelectorAll('.weather-option input:checked')]
     .map(cb => cb.value);
 
   await addDoc(collection(db, "flights"), {
@@ -251,6 +257,7 @@ window.endFlight = async () => {
     endTime: endTime.toISOString(),
     drone: drone.value,
     location: location.value,
+    laanc: laanc.value,
     purpose: purpose.value,
     daynight: daynight.value,
     observer: observer.value,
@@ -261,15 +268,13 @@ window.endFlight = async () => {
 
   startTime = null;
   timer.innerText = "00:00:00";
-  document.querySelectorAll('.weather-grid input').forEach(cb => cb.checked = false);
+  document.querySelectorAll('.weather-option input').forEach(cb => cb.checked = false);
 };
 
 window.toggleAdmin = () => {
-  if (!admin) {
-    if (prompt("Enter Admin PIN") === ADMIN_PIN) {
-      admin = true;
-      document.querySelectorAll(".adminOnly").forEach(e => e.classList.remove("hidden"));
-    }
+  if (!admin && prompt("Enter Admin PIN") === ADMIN_PIN) {
+    admin = true;
+    document.querySelectorAll(".adminOnly").forEach(e => e.classList.remove("hidden"));
   } else {
     admin = false;
     document.querySelectorAll(".adminOnly").forEach(e => e.classList.add("hidden"));
@@ -293,6 +298,7 @@ onSnapshot(collection(db, "flights"), snap => {
         <td>${formatTime(f.endTime)}</td>
         <td>${f.drone}</td>
         <td>${f.location}</td>
+        <td>${f.laanc || ""}</td>
         <td>${f.minutes}</td>
         <td>${(f.weather || []).join(", ")}</td>
         <td>${f.notes || ""}</td>
@@ -304,7 +310,7 @@ onSnapshot(collection(db, "flights"), snap => {
   totalMinutes.innerText = minutes;
 });
 
-window.deleteFlight = async (id) => {
+window.deleteFlight = async id => {
   if (confirm("Delete flight?")) {
     await deleteDoc(doc(db, "flights", id));
   }
