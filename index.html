@@ -17,7 +17,6 @@ input:disabled { background: #f0f0f0; color: black; }
 button { width: 100%; padding: 14px; font-size: 18px; margin-top: 10px; border-radius: 10px; border: none; color: white; cursor: pointer; }
 .start { background: #28a745; }
 .stop { background: #c82333; }
-.admin { background: #6c757d; }
 #timer { text-align: center; font-size: 26px; font-weight: bold; margin-top: 10px; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 18px; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; word-break: break-word; }
@@ -100,10 +99,6 @@ th { background: #f0f0f0; }
 </div>
 
 <div class="card">
-  <button class="admin" onclick="toggleAdmin()">Admin Unlock / Lock</button>
-</div>
-
-<div class="card">
   <h2>Flight History</h2>
   <table>
     <thead>
@@ -117,7 +112,7 @@ th { background: #f0f0f0; }
         <th>Minutes</th>
         <th>Weather</th>
         <th>Notes</th>
-        <th class="adminOnly hidden">Delete</th>
+        <th>Delete</th>
       </tr>
     </thead>
     <tbody id="log"></tbody>
@@ -138,12 +133,11 @@ const firebaseConfig = {
   projectId: "flight-log-5f750"
 };
 
-const ADMIN_PIN = "1019";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 enableIndexedDbPersistence(db).catch(() => {});
 
-let startTime = null, timerInterval = null, admin = false;
+let startTime = null, timerInterval = null;
 
 const formatTime = t => {
   if (!t) return "";
@@ -152,7 +146,7 @@ const formatTime = t => {
 };
 
 window.startFlight = () => {
-  if (startTime) return;
+  if (startTime) return; // Prevent multiple timers
   startTime = new Date();
   timerInterval = setInterval(() => {
     timer.innerText = new Date(new Date()-startTime).toISOString().substring(11,19);
@@ -162,6 +156,7 @@ window.startFlight = () => {
 window.endFlight = async () => {
   if (!startTime) return;
   clearInterval(timerInterval);
+  timerInterval = null;
 
   const endTime = new Date();
   const minutes = Math.round((endTime-startTime)/60000);
@@ -171,14 +166,14 @@ window.endFlight = async () => {
     date: Timestamp.fromDate(startTime),
     startTime: Timestamp.fromDate(startTime),
     endTime: Timestamp.fromDate(endTime),
-    drone: (document.getElementById("drone")?.value || ""),
-    location: (document.getElementById("location")?.value || ""),
-    laanc: (document.getElementById("laanc")?.value || ""),
-    purpose: (document.getElementById("purpose")?.value || ""),
-    daynight: (document.getElementById("daynight")?.value || "Day"),
-    observer: (document.getElementById("observer")?.value || ""),
-    weather: (document.getElementById("weather")?.value || ""),
-    notes: (document.getElementById("notes")?.value || ""),
+    drone: document.getElementById("drone")?.value || "",
+    location: document.getElementById("location")?.value || "",
+    laanc: document.getElementById("laanc")?.value || "",
+    purpose: document.getElementById("purpose")?.value || "",
+    daynight: document.getElementById("daynight")?.value || "Day",
+    observer: document.getElementById("observer")?.value || "",
+    weather: document.getElementById("weather")?.value || "",
+    notes: document.getElementById("notes")?.value || "",
     minutes
   };
 
@@ -190,7 +185,7 @@ window.endFlight = async () => {
     return;
   }
 
-  // Reset form for new flight
+  // Reset form for next flight
   ["drone","location","laanc","purpose","daynight","observer","weather","notes"].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.value = (id==="daynight") ? "Day" : "";
@@ -199,13 +194,9 @@ window.endFlight = async () => {
   timer.innerText = "00:00:00";
 };
 
-window.toggleAdmin = () => {
-  if(!admin && prompt("Enter Admin PIN")===ADMIN_PIN){
-    admin=true;
-    document.querySelectorAll(".adminOnly").forEach(e=>e.classList.remove("hidden"));
-  } else {
-    admin=false;
-    document.querySelectorAll(".adminOnly").forEach(e=>e.classList.add("hidden"));
+window.deleteFlight = async id => {
+  if(confirm("Delete this flight?")) {
+    await deleteDoc(doc(db,"flights",id));
   }
 };
 
@@ -227,18 +218,17 @@ const renderFlights = snap => {
           <td>${f.minutes}</td>
           <td class="weather">${f.weather||""}</td>
           <td class="notes">${f.notes||""}</td>
-          ${admin?`<td><button onclick="deleteFlight('${d.id}')">❌</button></td>`:""}
+          <td><button onclick="deleteFlight('${d.id}')">❌</button></td>
         </tr>`;
     });
-    totalFlights.innerText=flights; totalMinutes.innerText=minutes;
+    totalFlights.innerText=flights;
+    totalMinutes.innerText=minutes;
   } catch(e){
     console.error("Error rendering flights:", e);
   }
 };
 
 onSnapshot(collection(db,"flights"), renderFlights);
-
-window.deleteFlight = async id => { if(confirm("Delete flight?")) await deleteDoc(doc(db,"flights",id)); };
 </script>
 
 </body>
