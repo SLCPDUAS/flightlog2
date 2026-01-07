@@ -125,7 +125,6 @@ import {
   onSnapshot, enableIndexedDbPersistence, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyBT_rjRmkYzgq0PZo5fTPbIjnICD5kbbzE",
   authDomain: "flight-log-5f750.firebaseapp.com",
@@ -134,9 +133,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-enableIndexedDbPersistence(db).catch(() => {});
+enableIndexedDbPersistence(db).catch(()=>{});
 
 let startTime = null, timerInterval = null;
+const timerDisplay = document.getElementById("timer");
+const startBtn = document.querySelector(".start");
 
 const formatTime = t => {
   if (!t) return "";
@@ -145,23 +146,23 @@ const formatTime = t => {
 };
 
 window.startFlight = () => {
-  if (startTime) return; // prevent multiple timers
-  if (timerInterval) clearInterval(timerInterval);
-
+  if(startTime) return;
+  clearInterval(timerInterval);
   startTime = new Date();
-  timer.innerText = "00:00:00";
+  timerDisplay.innerText = "00:00:00";
+  startBtn.disabled = true;
 
-  timerInterval = setInterval(() => {
+  timerInterval = setInterval(()=>{
     const diff = new Date() - startTime;
-    const hrs = String(Math.floor(diff / 3600000)).padStart(2,'0');
-    const mins = String(Math.floor((diff % 3600000)/60000)).padStart(2,'0');
-    const secs = String(Math.floor((diff % 60000)/1000)).padStart(2,'0');
-    timer.innerText = `${hrs}:${mins}:${secs}`;
+    const hrs = String(Math.floor(diff/3600000)).padStart(2,'0');
+    const mins = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+    const secs = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+    timerDisplay.innerText = `${hrs}:${mins}:${secs}`;
   },1000);
 };
 
 window.endFlight = async () => {
-  if (!startTime) return;
+  if(!startTime) return;
   clearInterval(timerInterval);
   timerInterval = null;
 
@@ -184,55 +185,46 @@ window.endFlight = async () => {
     minutes
   };
 
-  try {
-    await addDoc(collection(db,"flights"), flightData);
-  } catch(err) {
-    console.error("Error saving flight:", err);
-    alert("Error saving flight: " + err.message);
-    return;
-  }
+  try { await addDoc(collection(db,"flights"), flightData); }
+  catch(err){ console.error(err); alert(err.message); }
 
-  // ✅ FULL RESET
+  // FULL RESET
   startTime = null;
-  timer.innerText = "00:00:00";
+  timerDisplay.innerText = "00:00:00";
+  startBtn.disabled = false;
+
   ["drone","location","laanc","purpose","daynight","observer","weather","notes"].forEach(id=>{
     const el = document.getElementById(id);
-    if(el) el.value = (id==="daynight") ? "Day" : "";
+    if(el) el.value = (id==="daynight")?"Day":"";
   });
 };
 
 window.deleteFlight = async id => {
-  if(confirm("Delete this flight?")) {
-    await deleteDoc(doc(db,"flights",id));
-  }
+  if(confirm("Delete this flight?")) await deleteDoc(doc(db,"flights",id));
 };
 
 const renderFlights = snap => {
-  try {
-    log.innerHTML="";
-    let flights=0, minutes=0;
-    snap.forEach(d=>{
-      const f=d.data(); flights++; minutes+=f.minutes;
-      const date = f.date?.toDate ? f.date.toDate() : new Date(f.date);
-      log.innerHTML+=`
-        <tr>
-          <td>${date.toLocaleDateString()}</td>
-          <td>${formatTime(f.startTime)}</td>
-          <td>${formatTime(f.endTime)}</td>
-          <td>${f.drone}</td>
-          <td>${f.location}</td>
-          <td>${f.laanc||""}</td>
-          <td>${f.minutes}</td>
-          <td class="weather">${f.weather||""}</td>
-          <td class="notes">${f.notes||""}</td>
-          <td><button onclick="deleteFlight('${d.id}')">❌</button></td>
-        </tr>`;
-    });
-    totalFlights.innerText=flights;
-    totalMinutes.innerText=minutes;
-  } catch(e){
-    console.error("Error rendering flights:", e);
-  }
+  log.innerHTML="";
+  let flights=0, minutes=0;
+  snap.forEach(d=>{
+    const f=d.data(); flights++; minutes+=f.minutes;
+    const date = f.date?.toDate ? f.date.toDate() : new Date(f.date);
+    log.innerHTML+=`
+      <tr>
+        <td>${date.toLocaleDateString()}</td>
+        <td>${formatTime(f.startTime)}</td>
+        <td>${formatTime(f.endTime)}</td>
+        <td>${f.drone}</td>
+        <td>${f.location}</td>
+        <td>${f.laanc||""}</td>
+        <td>${f.minutes}</td>
+        <td class="weather">${f.weather||""}</td>
+        <td class="notes">${f.notes||""}</td>
+        <td><button onclick="deleteFlight('${d.id}')">❌</button></td>
+      </tr>`;
+  });
+  totalFlights.innerText=flights;
+  totalMinutes.innerText=minutes;
 };
 
 onSnapshot(collection(db,"flights"), renderFlights);
