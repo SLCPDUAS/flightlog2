@@ -159,7 +159,7 @@ window.endFlight = async () => {
   timerInterval = null;
 
   const endTime = new Date();
-  const minutes = Math.round((endTime-startTime)/60000);
+  const minutes = Math.round((endTime - startTime)/60000);
 
   const flightData = {
     pilot: "Randy Neal",
@@ -185,13 +185,13 @@ window.endFlight = async () => {
     return;
   }
 
-  // Reset form for next flight
-  ["drone","location","laanc","purpose","daynight","observer","weather","notes"].forEach(id=>{
+  // ✅ Reset form and timer for next flight
+  startTime = null;
+  timer.innerText = "00:00:00";
+  ["drone","location","laanc","purpose","daynight","observer","weather","notes"].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = (id==="daynight") ? "Day" : "";
   });
-  startTime = null;
-  timer.innerText = "00:00:00";
 };
 
 window.deleteFlight = async id => {
