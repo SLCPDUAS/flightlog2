@@ -16,10 +16,7 @@ body {
   color: black;
 }
 
-h1, h2 {
-  text-align: center;
-  margin: 6px 0;
-}
+h1, h2 { text-align: center; margin: 6px 0; }
 
 .card {
   background: white;
@@ -46,14 +43,10 @@ input, select, textarea {
   border-radius: 6px;
 }
 
-input:disabled {
-  background: #f0f0f0;
-  color: black;
-}
-
+input:disabled { background: #f0f0f0; color: black; }
 textarea { resize: vertical; }
 
-/* Weather – fixed alignment */
+/* Weather checkboxes */
 .weather-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -66,14 +59,10 @@ textarea { resize: vertical; }
   align-items: center;
   gap: 6px;
   font-size: 16px;
-  font-weight: normal;
   cursor: pointer;
 }
 
-.weather-option input {
-  width: auto;
-  margin: 0;
-}
+.weather-option input { margin: 0; }
 
 /* Buttons */
 button {
@@ -91,12 +80,7 @@ button {
 .stop { background: #c82333; }
 .admin { background: #6c757d; }
 
-#timer {
-  text-align: center;
-  font-size: 26px;
-  font-weight: bold;
-  margin-top: 10px;
-}
+#timer { text-align: center; font-size: 26px; font-weight: bold; margin-top: 10px; }
 
 .stats {
   display: grid;
@@ -105,19 +89,57 @@ button {
   font-size: 18px;
 }
 
+/* Table styling */
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  table-layout: fixed; /* Keep columns within card */
+  word-break: break-word;
 }
 
 th, td {
   border: 1px solid black;
-  padding: 6px;
-  text-align: center;
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: normal;
 }
 
+th { background: #f0f0f0; }
+
+td.weather { width: 20%; }
+td.notes { width: 25%; }
+
+/* Hidden class for admin buttons */
 .hidden { display: none; }
+
+/* Responsive table for mobile */
+@media (max-width: 600px) {
+  table, thead, tbody, th, td, tr { display: block; }
+  thead { display: none; }
+  tr { margin-bottom: 12px; border: 1px solid black; padding: 8px; border-radius: 8px; }
+  td { border: none; position: relative; padding-left: 50%; margin-bottom: 6px; }
+  td:before {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    width: 45%;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+  td:nth-of-type(1):before { content: "Date"; }
+  td:nth-of-type(2):before { content: "Start"; }
+  td:nth-of-type(3):before { content: "End"; }
+  td:nth-of-type(4):before { content: "Drone"; }
+  td:nth-of-type(5):before { content: "Location"; }
+  td:nth-of-type(6):before { content: "LAANC"; }
+  td:nth-of-type(7):before { content: "Minutes"; }
+  td:nth-of-type(8):before { content: "Weather"; }
+  td:nth-of-type(9):before { content: "Notes"; }
+  td:nth-of-type(10):before { content: "Delete"; }
+}
 </style>
 </head>
 
@@ -135,7 +157,6 @@ th, td {
   <label>Location</label>
   <input id="location">
 
-  <!-- ✅ LAANC SECTION -->
   <label>LAANC Authorization # (if applicable)</label>
   <input id="laanc" placeholder="e.g. A2025-004821">
 
@@ -209,7 +230,7 @@ import {
   onSnapshot, enableIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 FIREBASE CONFIG */
+/* Firebase config */
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -217,16 +238,13 @@ const firebaseConfig = {
 };
 
 const ADMIN_PIN = "1019";
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ✅ OFFLINE MODE */
+/* Offline mode */
 enableIndexedDbPersistence(db).catch(() => {});
 
-let startTime = null;
-let timerInterval = null;
-let admin = false;
+let startTime = null, timerInterval = null, admin = false;
 
 const formatTime = t =>
   new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -242,8 +260,8 @@ window.startFlight = () => {
 
 window.endFlight = async () => {
   if (!startTime) return;
-
   clearInterval(timerInterval);
+
   const endTime = new Date();
   const minutes = Math.round((endTime - startTime) / 60000);
 
@@ -283,13 +301,11 @@ window.toggleAdmin = () => {
 
 onSnapshot(collection(db, "flights"), snap => {
   log.innerHTML = "";
-  let flights = 0;
-  let minutes = 0;
+  let flights = 0, minutes = 0;
 
   snap.forEach(d => {
     const f = d.data();
-    flights++;
-    minutes += f.minutes;
+    flights++; minutes += f.minutes;
 
     log.innerHTML += `
       <tr>
@@ -300,8 +316,8 @@ onSnapshot(collection(db, "flights"), snap => {
         <td>${f.location}</td>
         <td>${f.laanc || ""}</td>
         <td>${f.minutes}</td>
-        <td>${(f.weather || []).join(", ")}</td>
-        <td>${f.notes || ""}</td>
+        <td class="weather">${(f.weather || []).join(", ")}</td>
+        <td class="notes">${f.notes || ""}</td>
         ${admin ? `<td><button onclick="deleteFlight('${d.id}')">❌</button></td>` : ""}
       </tr>`;
   });
@@ -311,9 +327,7 @@ onSnapshot(collection(db, "flights"), snap => {
 });
 
 window.deleteFlight = async id => {
-  if (confirm("Delete flight?")) {
-    await deleteDoc(doc(db, "flights", id));
-  }
+  if (confirm("Delete flight?")) await deleteDoc(doc(db,"flights",id));
 };
 </script>
 
