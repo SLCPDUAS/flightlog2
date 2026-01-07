@@ -44,7 +44,7 @@ th { background:#eee; }
   <input id="drone">
 
   <label>Location</label>
-  <input id="location">
+  <input id="flightLocation">
 
   <label>LAANC Authorization</label>
   <input id="laanc">
@@ -111,7 +111,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ===== TIMER (DO NOT TOUCH) ===== */
+/* ===== TIMER (STABLE) ===== */
 let timerInterval = null;
 let elapsedSeconds = 0;
 let flightStartDate = null;
@@ -152,7 +152,6 @@ window.endFlight = async () => {
   clearInterval(timerInterval);
   timerInterval = null;
 
-  // CAPTURE DATA FIRST (CRITICAL FIX)
   const saveDate = flightStartDate;
   const saveDuration = formatDuration(elapsedSeconds);
 
@@ -160,7 +159,7 @@ window.endFlight = async () => {
     date: Timestamp.fromDate(saveDate),
     duration: saveDuration,
     drone: drone.value || "",
-    location: location.value || "",
+    location: flightLocation.value || "",
     laanc: laanc.value || "",
     purpose: purpose.value || "",
     daynight: daynight.value || "",
@@ -169,12 +168,11 @@ window.endFlight = async () => {
     notes: notes.value || ""
   });
 
-  // SAFE RESET AFTER SAVE
   elapsedSeconds = 0;
   flightStartDate = null;
   timer.innerText = "00:00:00";
 
-  ["drone","location","laanc","purpose","observer","weather","notes"]
+  ["drone","flightLocation","laanc","purpose","observer","weather","notes"]
     .forEach(id => document.getElementById(id).value = "");
   daynight.value = "Day";
 };
