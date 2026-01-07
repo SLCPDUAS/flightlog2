@@ -5,119 +5,38 @@
 <title>Drone Flight Log – Randy Neal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!--
-  SIMPLE FIREBASE SETUP INCLUDED:
-
-  Your Firebase info is already embedded. Flight data will save to your Firestore collection 'flights'.
-  Features:
-  - Manual Weather input
-  - LAANC input
-  - Start / End timestamps
-  - Flight time calculation
-  - Offline persistence
-  - Admin PIN 1019 to delete flights
--->
-
 <style>
 * { box-sizing: border-box; }
-
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-  margin: 0;
-  padding: 14px;
-  color: black;
-}
-
-h1, h2 { text-align: center; margin: 6px 0; }
-
-.card {
-  background: white;
-  border: 2px solid black;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 14px;
-  box-shadow: 0 3px 8px rgba(0,0,0,.15);
-}
-
-label {
-  font-weight: bold;
-  margin-top: 10px;
-  display: block;
-}
-
-input, select, textarea {
-  width: 100%;
-  padding: 10px;
-  margin-top: 4px;
-  font-size: 16px;
-  color: black;
-  border: 1px solid black;
-  border-radius: 6px;
-}
-
-input:disabled { background: #f0f0f0; color: black; }
+body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 14px; color: black; }
+h1,h2 { text-align: center; margin: 6px 0; }
+.card { background: white; border: 2px solid black; border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: 0 3px 8px rgba(0,0,0,.15); }
+label { font-weight: bold; margin-top: 10px; display: block; }
+input, select, textarea { width: 100%; padding: 10px; margin-top: 4px; font-size: 16px; color: black; border: 1px solid black; border-radius: 6px; }
 textarea { resize: vertical; }
-
-button {
-  width: 100%;
-  padding: 14px;
-  font-size: 18px;
-  margin-top: 10px;
-  border-radius: 10px;
-  border: none;
-  color: white;
-  cursor: pointer;
-}
-
+input:disabled { background: #f0f0f0; color: black; }
+button { width: 100%; padding: 14px; font-size: 18px; margin-top: 10px; border-radius: 10px; border: none; color: white; cursor: pointer; }
 .start { background: #28a745; }
 .stop { background: #c82333; }
 .admin { background: #6c757d; }
-
 #timer { text-align: center; font-size: 26px; font-weight: bold; margin-top: 10px; }
-
-.stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  font-size: 18px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  word-break: break-word;
-}
-
-th, td {
-  border: 1px solid black;
-  padding: 8px;
-  text-align: left;
-  vertical-align: top;
-  overflow-wrap: break-word;
-  white-space: normal;
-}
-
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 18px; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; word-break: break-word; }
+th, td { border: 1px solid black; padding: 8px; text-align: left; vertical-align: top; overflow-wrap: break-word; white-space: normal; }
 td.weather { width: 20%; }
 td.notes { width: 25%; }
-
 th { background: #f0f0f0; }
 .hidden { display: none; }
 
-@media (max-width: 600px) {
+/* Mobile-friendly layout */
+@media (max-width: 700px) {
+  .card { padding: 12px; }
+  input, select, textarea { font-size: 14px; padding: 8px; }
+  button { font-size: 16px; padding: 12px; }
   table, thead, tbody, th, td, tr { display: block; }
   thead { display: none; }
   tr { margin-bottom: 12px; border: 1px solid black; padding: 8px; border-radius: 8px; }
   td { border: none; position: relative; padding-left: 50%; margin-bottom: 6px; }
-  td:before {
-    position: absolute;
-    top: 8px;
-    left: 10px;
-    width: 45%;
-    font-weight: bold;
-    white-space: nowrap;
-  }
+  td:before { position: absolute; top: 8px; left: 10px; width: 45%; font-weight: bold; white-space: nowrap; }
   td:nth-of-type(1):before { content: "Date"; }
   td:nth-of-type(2):before { content: "Start"; }
   td:nth-of-type(3):before { content: "End"; }
@@ -131,7 +50,6 @@ th { background: #f0f0f0; }
 }
 </style>
 </head>
-
 <body>
 
 <h1>Drone Flight Log</h1>
@@ -146,7 +64,7 @@ th { background: #f0f0f0; }
   <label>Location</label>
   <input id="location">
 
-  <label>LAANC Authorization # (if applicable)</label>
+  <label>LAANC Authorization #</label>
   <input id="laanc" placeholder="e.g. A2025-004821">
 
   <label>Purpose of Flight</label>
@@ -213,7 +131,7 @@ import {
   onSnapshot, enableIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔹 Firebase config provided by user */
+/* Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyBT_rjRmkYzgq0PZo5fTPbIjnICD5kbbzE",
   authDomain: "flight-log-5f750.firebaseapp.com",
@@ -223,22 +141,22 @@ const firebaseConfig = {
 const ADMIN_PIN = "1019";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-/* Offline mode enabled */
 enableIndexedDbPersistence(db).catch(() => {});
 
 let startTime = null, timerInterval = null, admin = false;
 
-const formatTime = t =>
-  new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const formatTime = t => {
+  if (!t) return "";
+  let dateObj = (typeof t === "object" && t.seconds) ? new Date(t.seconds*1000) : new Date(t);
+  return dateObj.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+};
 
 window.startFlight = () => {
   if (startTime) return;
   startTime = new Date();
   timerInterval = setInterval(() => {
-    timer.innerText = new Date(new Date() - startTime)
-      .toISOString().substring(11,19);
-  }, 1000);
+    timer.innerText = new Date(new Date()-startTime).toISOString().substring(11,19);
+  },1000);
 };
 
 window.endFlight = async () => {
@@ -246,11 +164,9 @@ window.endFlight = async () => {
   clearInterval(timerInterval);
 
   const endTime = new Date();
-  const minutes = Math.round((endTime - startTime) / 60000);
+  const minutes = Math.round((endTime-startTime)/60000);
 
-  const weatherValue = weather.value || "";
-
-  await addDoc(collection(db, "flights"), {
+  const flightData = {
     pilot: "Randy Neal",
     date: startTime.toISOString(),
     startTime: startTime.toISOString(),
@@ -261,57 +177,55 @@ window.endFlight = async () => {
     purpose: purpose.value,
     daynight: daynight.value,
     observer: observer.value,
-    weather: weatherValue,
+    weather: weather.value||"",
     notes: notes.value,
     minutes
-  });
+  };
 
-  startTime = null;
-  timer.innerText = "00:00:00";
-  weather.value = "";
-  notes.value = "";
+  try { await addDoc(collection(db,"flights"), flightData); } 
+  catch(err){ alert("Error saving flight: "+err.message); return; }
+
+  // reset form
+  drone.value=""; location.value=""; laanc.value=""; purpose.value="";
+  daynight.value="Day"; observer.value=""; weather.value=""; notes.value="";
+  startTime=null; timer.innerText="00:00:00";
 };
 
 window.toggleAdmin = () => {
-  if (!admin && prompt("Enter Admin PIN") === ADMIN_PIN) {
-    admin = true;
-    document.querySelectorAll(".adminOnly").forEach(e => e.classList.remove("hidden"));
-  } else {
-    admin = false;
-    document.querySelectorAll(".adminOnly").forEach(e => e.classList.add("hidden"));
+  if(!admin && prompt("Enter Admin PIN")===ADMIN_PIN){
+    admin=true;
+    document.querySelectorAll(".adminOnly").forEach(e=>e.classList.remove("hidden"));
+  }else{
+    admin=false;
+    document.querySelectorAll(".adminOnly").forEach(e=>e.classList.add("hidden"));
   }
 };
 
-onSnapshot(collection(db, "flights"), snap => {
-  log.innerHTML = "";
-  let flights = 0, minutes = 0;
-
-  snap.forEach(d => {
-    const f = d.data();
-    flights++; minutes += f.minutes;
-
-    log.innerHTML += `
+const renderFlights = snap=>{
+  log.innerHTML="";
+  let flights=0, minutes=0;
+  snap.forEach(d=>{
+    const f=d.data(); flights++; minutes+=f.minutes;
+    log.innerHTML+=`
       <tr>
         <td>${new Date(f.date).toLocaleDateString()}</td>
         <td>${formatTime(f.startTime)}</td>
         <td>${formatTime(f.endTime)}</td>
         <td>${f.drone}</td>
         <td>${f.location}</td>
-        <td>${f.laanc || ""}</td>
+        <td>${f.laanc||""}</td>
         <td>${f.minutes}</td>
-        <td class="weather">${f.weather || ""}</td>
-        <td class="notes">${f.notes || ""}</td>
-        ${admin ? `<td><button onclick="deleteFlight('${d.id}')">❌</button></td>` : ""}
+        <td class="weather">${f.weather||""}</td>
+        <td class="notes">${f.notes||""}</td>
+        ${admin?`<td><button onclick="deleteFlight('${d.id}')">❌</button></td>`:""}
       </tr>`;
   });
-
-  totalFlights.innerText = flights;
-  totalMinutes.innerText = minutes;
-});
-
-window.deleteFlight = async id => {
-  if (confirm("Delete flight?")) await deleteDoc(doc(db,"flights",id));
+  totalFlights.innerText=flights; totalMinutes.innerText=minutes;
 };
+
+onSnapshot(collection(db,"flights"),renderFlights);
+
+window.deleteFlight = async id => { if(confirm("Delete flight?")) await deleteDoc(doc(db,"flights",id)); };
 </script>
 
 </body>
