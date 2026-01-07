@@ -18,7 +18,7 @@ body {
 
 h1, h2 {
   text-align: center;
-  margin-top: 5px;
+  margin: 6px 0;
 }
 
 .card {
@@ -51,22 +51,20 @@ input:disabled {
   color: black;
 }
 
-textarea {
-  resize: vertical;
-}
+textarea { resize: vertical; }
 
-.weather-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px 14px;
   margin-top: 6px;
 }
 
-.weather-group label {
-  font-weight: normal;
+.weather-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  font-size: 16px;
 }
 
 button {
@@ -142,12 +140,12 @@ th, td {
   <input id="observer">
 
   <label>Weather (select all that apply)</label>
-  <div class="weather-group">
-    <label><input type="checkbox" value="Clear"> Clear</label>
-    <label><input type="checkbox" value="Cloudy"> Cloudy</label>
-    <label><input type="checkbox" value="Rain"> Rain</label>
-    <label><input type="checkbox" value="Snow"> Snow</label>
-    <label><input type="checkbox" value="Windy"> Windy</label>
+  <div class="weather-grid">
+    <div class="weather-item"><input type="checkbox" value="Clear"><span>Clear</span></div>
+    <div class="weather-item"><input type="checkbox" value="Cloudy"><span>Cloudy</span></div>
+    <div class="weather-item"><input type="checkbox" value="Rain"><span>Rain</span></div>
+    <div class="weather-item"><input type="checkbox" value="Snow"><span>Snow</span></div>
+    <div class="weather-item"><input type="checkbox" value="Windy"><span>Windy</span></div>
   </div>
 
   <label>Notes</label>
@@ -165,12 +163,6 @@ th, td {
     <div>Total Flights: <b id="totalFlights">0</b></div>
     <div>Total Minutes: <b id="totalMinutes">0</b></div>
   </div>
-</div>
-
-<div class="card">
-  <h2>Export</h2>
-  <button class="export" onclick="exportCSV()">Export CSV</button>
-  <button class="export" onclick="exportPDF()">Export PDF</button>
 </div>
 
 <div class="card">
@@ -199,8 +191,17 @@ th, td {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  enableIndexedDbPersistence
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* 🔥 FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -212,12 +213,17 @@ const ADMIN_PIN = "1019";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* ✅ OFFLINE MODE ENABLED */
+enableIndexedDbPersistence(db).catch(err => {
+  console.warn("Offline persistence unavailable:", err.code);
+});
+
 let startTime = null;
 let timerInterval = null;
 let admin = false;
 
-const formatTime = d =>
-  new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const formatTime = iso =>
+  new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 window.startFlight = () => {
   if (startTime) return;
@@ -235,7 +241,7 @@ window.endFlight = async () => {
   const endTime = new Date();
   const minutes = Math.round((endTime - startTime) / 60000);
 
-  const weather = [...document.querySelectorAll('.weather-group input:checked')]
+  const weather = [...document.querySelectorAll('.weather-grid input:checked')]
     .map(cb => cb.value);
 
   await addDoc(collection(db, "flights"), {
@@ -255,7 +261,7 @@ window.endFlight = async () => {
 
   startTime = null;
   timer.innerText = "00:00:00";
-  document.querySelectorAll('.weather-group input').forEach(cb => cb.checked = false);
+  document.querySelectorAll('.weather-grid input').forEach(cb => cb.checked = false);
 };
 
 window.toggleAdmin = () => {
@@ -303,9 +309,6 @@ window.deleteFlight = async (id) => {
     await deleteDoc(doc(db, "flights", id));
   }
 };
-
-window.exportCSV = () => alert("CSV export ready");
-window.exportPDF = () => alert("PDF export ready");
 </script>
 
 </body>
