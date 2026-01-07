@@ -8,16 +8,25 @@
 <style>
 * { box-sizing: border-box; }
 body { font-family: Arial, sans-serif; background:#f4f6f8; padding:14px; color:black; }
+h1,h2 { text-align:center; }
 .card { background:white; border:2px solid black; border-radius:12px; padding:16px; margin-bottom:14px; }
 label { font-weight:bold; margin-top:10px; display:block; }
-input, select, textarea { width:100%; padding:10px; font-size:16px; border:1px solid black; border-radius:6px; color:black; }
+input, select, textarea {
+  width:100%; padding:10px; font-size:16px;
+  border:1px solid black; border-radius:6px; color:black;
+}
 textarea { resize:vertical; }
-button { width:100%; padding:14px; font-size:18px; margin-top:10px; border:none; border-radius:10px; color:white; }
+button {
+  width:100%; padding:14px; font-size:18px;
+  margin-top:10px; border:none; border-radius:10px;
+  color:white; cursor:pointer;
+}
 .start { background:#28a745; }
 .stop { background:#c82333; }
 #timer { text-align:center; font-size:28px; font-weight:bold; margin-top:10px; }
-table { width:100%; border-collapse:collapse; }
-th,td { border:1px solid black; padding:8px; }
+
+table { width:100%; border-collapse:collapse; margin-top:10px; }
+th, td { border:1px solid black; padding:8px; text-align:left; vertical-align:top; }
 th { background:#eee; }
 </style>
 </head>
@@ -30,13 +39,32 @@ th { background:#eee; }
   <label>Pilot</label>
   <input value="Randy Neal" disabled>
 
-  <label>Drone</label><input id="drone">
-  <label>Location</label><input id="location">
-  <label>LAANC</label><input id="laanc">
-  <label>Purpose</label><input id="purpose">
-  <label>Observer</label><input id="observer">
-  <label>Weather</label><input id="weather">
-  <label>Notes</label><textarea id="notes"></textarea>
+  <label>Drone</label>
+  <input id="drone">
+
+  <label>Location</label>
+  <input id="location">
+
+  <label>LAANC Authorization</label>
+  <input id="laanc">
+
+  <label>Purpose of Flight</label>
+  <input id="purpose">
+
+  <label>Day / Night</label>
+  <select id="daynight">
+    <option>Day</option>
+    <option>Night</option>
+  </select>
+
+  <label>Visual Observer</label>
+  <input id="observer">
+
+  <label>Weather</label>
+  <input id="weather" placeholder="Clear, Windy, etc">
+
+  <label>Notes</label>
+  <textarea id="notes"></textarea>
 
   <button class="start" onclick="startFlight()">START FLIGHT</button>
   <button class="stop" onclick="endFlight()">END FLIGHT</button>
@@ -49,7 +77,16 @@ th { background:#eee; }
   <table>
     <thead>
       <tr>
-        <th>Date</th><th>Minutes</th><th>Drone</th><th>Delete</th>
+        <th>Date</th>
+        <th>Minutes</th>
+        <th>Drone</th>
+        <th>Location</th>
+        <th>LAANC</th>
+        <th>Day/Night</th>
+        <th>Observer</th>
+        <th>Weather</th>
+        <th>Notes</th>
+        <th>Delete</th>
       </tr>
     </thead>
     <tbody id="log"></tbody>
@@ -58,8 +95,10 @@ th { background:#eee; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, Timestamp } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, collection, addDoc, deleteDoc, doc,
+  onSnapshot, Timestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBT_rjRmkYzgq0PZo5fTPbIjnICD5kbbzE",
@@ -70,6 +109,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* ---- BULLETPROOF TIMER ---- */
 let timerInterval = null;
 let elapsedSeconds = 0;
 let flightStartDate = null;
@@ -79,16 +119,14 @@ function updateTimer() {
   const hrs = String(Math.floor(elapsedSeconds / 3600)).padStart(2,'0');
   const mins = String(Math.floor((elapsedSeconds % 3600)/60)).padStart(2,'0');
   const secs = String(elapsedSeconds % 60).padStart(2,'0');
-  document.getElementById("timer").innerText = `${hrs}:${mins}:${secs}`;
+  timer.innerText = `${hrs}:${mins}:${secs}`;
 }
 
 window.startFlight = () => {
   if (timerInterval) return;
-
   elapsedSeconds = 0;
   flightStartDate = new Date();
-  document.getElementById("timer").innerText = "00:00:00";
-
+  timer.innerText = "00:00:00";
   timerInterval = setInterval(updateTimer, 1000);
 };
 
@@ -103,31 +141,48 @@ window.endFlight = async () => {
   await addDoc(collection(db,"flights"), {
     date: Timestamp.fromDate(flightStartDate),
     minutes,
-    drone: drone.value || ""
+    drone: drone.value || "",
+    location: location.value || "",
+    laanc: laanc.value || "",
+    purpose: purpose.value || "",
+    daynight: daynight.value || "",
+    observer: observer.value || "",
+    weather: weather.value || "",
+    notes: notes.value || ""
   });
 
-  // HARD RESET
+  // FULL RESET
   elapsedSeconds = 0;
   flightStartDate = null;
-  document.getElementById("timer").innerText = "00:00:00";
-  ["drone","location","laanc","purpose","observer","weather","notes"].forEach(id => document.getElementById(id).value="");
+  timer.innerText = "00:00:00";
+  ["drone","location","laanc","purpose","observer","weather","notes"].forEach(id=>document.getElementById(id).value="");
+  daynight.value = "Day";
 };
 
 window.deleteFlight = async id => {
-  if(confirm("Delete flight?")) await deleteDoc(doc(db,"flights",id));
+  if(confirm("Delete this flight?")) {
+    await deleteDoc(doc(db,"flights",id));
+  }
 };
 
 onSnapshot(collection(db,"flights"), snap => {
   log.innerHTML="";
   snap.forEach(d=>{
-    const f=d.data();
+    const f = d.data();
     log.innerHTML += `
       <tr>
         <td>${f.date.toDate().toLocaleDateString()}</td>
         <td>${f.minutes}</td>
         <td>${f.drone}</td>
+        <td>${f.location}</td>
+        <td>${f.laanc}</td>
+        <td>${f.daynight}</td>
+        <td>${f.observer}</td>
+        <td>${f.weather}</td>
+        <td>${f.notes}</td>
         <td><button onclick="deleteFlight('${d.id}')">❌</button></td>
-      </tr>`;
+      </tr>
+    `;
   });
 });
 </script>
