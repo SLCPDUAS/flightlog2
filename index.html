@@ -46,11 +46,11 @@ input, select, textarea {
 input:disabled { background: #f0f0f0; color: black; }
 textarea { resize: vertical; }
 
-/* Weather checkboxes */
-.weather-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px 14px;
+/* ✅ Weather Section: Flexbox for perfect alignment */
+.weather-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-top: 6px;
 }
 
@@ -60,9 +60,8 @@ textarea { resize: vertical; }
   gap: 6px;
   font-size: 16px;
   cursor: pointer;
+  flex: 1 1 30%; /* allows two or three per row based on screen */
 }
-
-.weather-option input { margin: 0; }
 
 /* Buttons */
 button {
@@ -93,7 +92,7 @@ button {
 table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* Keep columns within card */
+  table-layout: fixed;
   word-break: break-word;
 }
 
@@ -103,19 +102,16 @@ th, td {
   text-align: left;
   vertical-align: top;
   overflow-wrap: break-word;
-  word-wrap: break-word;
   white-space: normal;
 }
-
-th { background: #f0f0f0; }
 
 td.weather { width: 20%; }
 td.notes { width: 25%; }
 
-/* Hidden class for admin buttons */
+th { background: #f0f0f0; }
 .hidden { display: none; }
 
-/* Responsive table for mobile */
+/* Mobile responsive table */
 @media (max-width: 600px) {
   table, thead, tbody, th, td, tr { display: block; }
   thead { display: none; }
@@ -173,7 +169,7 @@ td.notes { width: 25%; }
   <input id="observer">
 
   <label>Weather (select all that apply)</label>
-  <div class="weather-grid">
+  <div class="weather-container">
     <label class="weather-option"><input type="checkbox" value="Clear">Clear</label>
     <label class="weather-option"><input type="checkbox" value="Cloudy">Cloudy</label>
     <label class="weather-option"><input type="checkbox" value="Rain">Rain</label>
